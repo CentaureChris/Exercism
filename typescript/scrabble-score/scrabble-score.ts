@@ -19,7 +19,7 @@ const SCORESTABLE: valuePoint[]= [
 export function score(word: string | undefined): number {
   if (!word) return 0; 
 
-  let splitWord = word.toUpperCase().split('');
+  const splitWord = word.toUpperCase().split('');
   let totalScore = 0;
 
   splitWord.forEach((letter) => {
