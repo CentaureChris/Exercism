@@ -1,0 +1,17 @@
+{
+  "authors": [
+    "MichaelBunker"
+  ],
+  "files": {
+    "solution": [
+      "Poker.php"
+    ],
+    "test": [
+      "PokerTest.php"
+    ],
+    "example": [
+      ".meta/example.php"
+    ]
+  },
+  "blurb": "Pick the best hand(s) from a list of poker hands."
+}
