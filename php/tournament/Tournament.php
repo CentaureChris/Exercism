@@ -29,19 +29,33 @@ class Tournament
 
     public string $competitionResume;
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public function tally($scoresResume): string
     {
+        if($scoresResume == ""){
+            return "Team                           | MP |  W |  D |  L |  P";
+        }
         $teamHeaderWithSpaces = "Team                           ";
-        $header = $teamHeaderWithSpaces."| MP |  W |  D |  L |  P";
+        $header = $teamHeaderWithSpaces . "| MP |  W |  D |  L |  P";
         $scores = $header;
         $scoresResume = $this->getStats($scoresResume);
+        uksort($scoresResume, function ($teamA, $teamB) use ($scoresResume) {
+            $pa = $scoresResume[$teamA]['P'];
+            $pb = $scoresResume[$teamB]['P'];
+
+            // 1) By points, descending
+            if ($pa !== $pb) {
+                return $pb <=> $pa;
+            }
+
+            // 2) Tie-break by team name, ascending (alphabetical)
+            return strcmp($teamA, $teamB);
+        });
+
         foreach ($scoresResume as $team => $stats) {
             $new = $team . substr($teamHeaderWithSpaces, strlen($team));
-            $new = substr($new, 0, strlen($teamHeaderWithSpaces)-1);   
+            $new = substr($new, 0, strlen($teamHeaderWithSpaces) - 1);
             $scores .= "\n" . $new . " |  " . ($stats["W"] + $stats["D"] + $stats["L"]) . " |  " . $stats["W"] . " |  " . $stats["D"] . " |  " . $stats["L"] . " |  " . $stats["P"];
         }
         return $scores;
@@ -119,15 +133,14 @@ class Tournament
     }
 }
 
-$resume = "Allegoric Alaskans;Blithering Badgers;win
-Devastating Donkeys;Courageous Californians;draw
-Devastating Donkeys;Allegoric Alaskans;win
-Courageous Californians;Blithering Badgers;loss
-Blithering Badgers;Devastating Donkeys;loss
-Allegoric Alaskans;Courageous Californians;win";
+$resume = "Courageous Californians;Devastating Donkeys;win\n" .
+    "Allegoric Alaskans;Blithering Badgers;win\n" .
+    "Devastating Donkeys;Allegoric Alaskans;loss\n" .
+    "Courageous Californians;Blithering Badgers;win\n" .
+    "Blithering Badgers;Devastating Donkeys;draw\n" .
+    "Allegoric Alaskans;Courageous Californians;draw";
 
 $tournament = new Tournament();
 
 print '<pre>';
 print $tournament->tally($resume);
-
