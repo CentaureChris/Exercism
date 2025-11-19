@@ -1,0 +1,27 @@
+{
+  "authors": [
+    "mikeSimonson"
+  ],
+  "contributors": [
+    "arueckauer",
+    "DerTee",
+    "G-Rath",
+    "kunicmarko20",
+    "kytrinyx",
+    "petemcfarlane"
+  ],
+  "files": {
+    "solution": [
+      "Allergies.php"
+    ],
+    "test": [
+      "AllergiesTest.php"
+    ],
+    "example": [
+      ".meta/example.php"
+    ]
+  },
+  "blurb": "Given a person's allergy score, determine whether or not they're allergic to a given item, and their full list of allergies.",
+  "source": "Exercise by the JumpstartLab team for students at The Turing School of Software and Design.",
+  "source_url": "https://turing.edu"
+}
