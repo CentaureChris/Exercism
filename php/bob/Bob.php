@@ -26,8 +26,31 @@ declare(strict_types=1);
 
 class Bob
 {
-    public function respondTo(string $str): string
+    public function respondTo(string $statement): string
     {
-        throw new \BadMethodCallException("Implement the respondTo function");
+        $trimmed = trim($statement);
+
+        if ($trimmed === '') {
+            return "Fine. Be that way!";
+        }
+
+        $isQuestion = substr($trimmed, -1) === '?';
+        $hasLetters = preg_match('/[[:alpha:]]/u', $trimmed) === 1;
+        $hasLowercase = preg_match('/[[:lower:]]/u', $trimmed) === 1;
+        $isYelling = $hasLetters && !$hasLowercase;
+
+        if ($isQuestion && $isYelling) {
+            return "Calm down, I know what I'm doing!";
+        }
+
+        if ($isQuestion) {
+            return "Sure.";
+        }
+
+        if ($isYelling) {
+            return "Whoa, chill out!";
+        }
+
+        return "Whatever.";
     }
 }
