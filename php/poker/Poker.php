@@ -55,6 +55,7 @@ class Poker
         "THREE OF KIND",
         "TWO PAIR",
         "PAIR",
+        "HIGH CARD"
     ];
 
     public function __construct(array $hands)
@@ -69,10 +70,20 @@ class Poker
             $handDetails['score'] = $this->getRank($handDetails['value']);
             array_push($handsSorted, $handDetails);
         }
-        usort($handsSorted, function ($a, $b) {
-            return $a['score'] <=> $b['score'];
-        });
-        $this->bestHands = array($handsSorted[0]['hand']);
+
+        $handsToCompare = [];
+        foreach ($handsSorted as $hand) {
+            $hand = $this->splitHandTocard($hand['hand']);
+            usort($hand, function ($a, $b) {
+                return (int)$this->cardValue[$b['value']] <=> (int)$this->cardValue[$a['value']];
+            });
+            array_push($handsToCompare, array_reverse($hand));
+        }
+
+        $sortedHands = $this->compareHands($handsToCompare);
+        $sortedHands = $this->handsArrayToStrings($sortedHands);
+        var_dump($sortedHands);
+        exit;
     }
 
     public function splitHandTocard(string $hand)
@@ -98,6 +109,16 @@ class Poker
             array_push($cardList, $c);
         }
         return $cardList;
+    }
+
+    public function handsArrayToStrings(array $hands): array
+    {
+        return array_map(function ($hand) {
+            return implode(',', array_map(
+                fn($card) => $card['value'] . $card['color'],
+                $hand
+            ));
+        }, $hands);
     }
 
     public function evaluateHand(string $hand): string | int
@@ -170,35 +191,47 @@ class Poker
                 return "ROYAL FLUSH";
             }
             return "STRAIGHT FLUSH";
-        }
-
-        if ($isFlush) {
+        } elseif ($isFlush) {
             return "FLUSH";
-        }
-
-        if ($isStraight) {
+        } elseif ($isStraight) {
             return "STRAIGHT";
         }
 
-         $score = 10;
-        foreach($hand as $card){
-            $score += $this->cardValue[$card['value']];
-        }
+        $score = $this->cardValue[$hand[4]['value']];
 
         return $score;
     }
 
     public function getRank(string|int $hand): string | int
     {
-        if(gettype($hand) == "integer"){
-            return $hand;
-        }else{
-            return $rankIndex = array_search($hand, $this->handRank, true);
+        if (gettype($hand) == "integer") {
+            $rankIndex = array_search("HIGH CARD", $this->handRank);
+        } else {
+            $rankIndex = array_search($hand, $this->handRank);
         }
+        return $rankIndex;
+    }
+
+    public function compareTwoHands(array $a, array $b): int
+    {
+        foreach ($a as $i => $cardA) {
+            $valueA = $this->cardValue[$cardA['value']];
+            $valueB = $this->cardValue[$b[$i]['value']];
+
+            if ($valueA > $valueB) return -1;
+            if ($valueA < $valueB) return 1;
+        }
+
+        return 0;
+    }
+
+    public function compareHands(array $hands): array
+    {
+        usort($hands, [$this, 'compareTwoHands']);
+        return $hands;
     }
 }
 
-$testHand = ['2S,4C,6S,7H,8H', '3S,4S,5D,6H,JH', '4D,4S,6S,8D,3C', '3H,4H,5C,6C,JD'];
+$testHand = ['2S,4C,7S,9H,10H', '4D,5S,6S,8D,3C', '3S,JH,4S,5D,6H'];
 $test = new Poker($testHand);
 var_dump($test->bestHands);
-
