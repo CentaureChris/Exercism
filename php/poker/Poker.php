@@ -60,31 +60,61 @@ class Poker
 
     public function __construct(array $hands)
     {
-        $handsSorted = [];
-        foreach ($hands as $hand) {
-            $handDetails = [
-                "hand" => $hand,
-                "value" => $this->evaluateHand($hand),
-                "score" => 0
+        // Build details for each hand: original string, rank score, and sorted cards for tiebreak
+        $handsDetails = [];
+
+        foreach ($hands as $handStr) {
+            $handValue = $this->evaluateHand($handStr);
+            $score     = $this->getRank($handValue);
+
+            $cards = $this->splitHandTocard($handStr);
+
+            // Sort cards LOW -> HIGH (so index 4 is highest, matching your compareTwoHands after reverse fix below)
+            usort($cards, fn($a, $b) => $this->cardValue[$a['value']] <=> $this->cardValue[$b['value']]);
+
+            // For comparing highest-first, we want HIGH -> LOW
+            $cardsDesc = array_reverse($cards);
+
+            $handsDetails[] = [
+                'hand'      => $handStr,
+                'score'     => $score,      // lower is better in your handRank array
+                'cardsDesc' => $cardsDesc,  // for tie-breaking
             ];
-            $handDetails['score'] = $this->getRank($handDetails['value']);
-            array_push($handsSorted, $handDetails);
         }
 
-        $handsToCompare = [];
-        foreach ($handsSorted as $hand) {
-            $hand = $this->splitHandTocard($hand['hand']);
-            usort($hand, function ($a, $b) {
-                return (int)$this->cardValue[$b['value']] <=> (int)$this->cardValue[$a['value']];
-            });
-            array_push($handsToCompare, array_reverse($hand));
+        // 1) Find best (minimum) score (ROYAL FLUSH = 0 is best, HIGH CARD = 9 is worst)
+        $bestScore = min(array_column($handsDetails, 'score'));
+
+        // 2) Keep only hands with that best score
+        $candidates = array_values(array_filter(
+            $handsDetails,
+            fn($h) => $h['score'] === $bestScore
+        ));
+
+        // 3) If only one candidate, it's the winner
+        if (count($candidates) === 1) {
+            $this->bestHands = [$candidates[0]['hand']];
+            return;
         }
 
-        $sortedHands = $this->compareHands($handsToCompare);
-        $sortedHands = $this->handsArrayToStrings($sortedHands);
-        var_dump($sortedHands);
-        exit;
+        // 4) Otherwise sort candidates by tie-breaker (highest cards etc.)
+        usort($candidates, function ($x, $y) {
+            return $this->compareTwoHands($x['cardsDesc'], $y['cardsDesc']);
+        });
+
+        // After sorting, first one is best. Collect all ties with it.
+        $best = $candidates[0];
+        $this->bestHands = [$best['hand']];
+
+        for ($i = 1; $i < count($candidates); $i++) {
+            if ($this->compareTwoHands($candidates[$i]['cardsDesc'], $best['cardsDesc']) === 0) {
+                $this->bestHands[] = $candidates[$i]['hand'];
+            } else {
+                break;
+            }
+        }
     }
+
 
     public function splitHandTocard(string $hand)
     {
@@ -232,6 +262,6 @@ class Poker
     }
 }
 
-$testHand = ['2S,4C,7S,9H,10H', '4D,5S,6S,8D,3C', '3S,JH,4S,5D,6H'];
-$test = new Poker($testHand);
+$hands = ['4D,5S,6S,8D,3C', '2S,4C,7S,9H,10H', '3S,4S,5D,6H,JH', '3H,4H,5C,6C,JD'];
+$test = new Poker($hands);
 var_dump($test->bestHands);
